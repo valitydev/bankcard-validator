@@ -1,0 +1,14 @@
+{application, bankcard_validator,
+ [{description, "Bank card validation library"},
+  {vsn, git},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    damsel,
+    dmt_client
+   ]},
+  {env,[]},
+  {modules, []},
+  {licenses, ["Apache 2.0"]}
+ ]}.
