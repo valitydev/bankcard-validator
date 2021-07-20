@@ -30,20 +30,12 @@
 -export_type([payment_system_id/0]).
 
 -spec get_payment_system_ruleset(payment_system_id(), context()) -> {ok, validation_rules()} | {error, not_found}.
-get_payment_system_ruleset(ID, Context) ->
-    #'Snapshot'{domain = Domain} = get_shapshot(Context),
-    case dmt_domain:get_object({payment_system, #domain_PaymentSystemRef{id = ID}}, Domain) of
-        {ok, {payment_system, #domain_PaymentSystemObject{data = #domain_PaymentSystem{validation_rules = Ruleset}}}} ->
-            {ok, Ruleset};
-        error ->
+get_payment_system_ruleset(PaymentSystemID, Context) ->
+    Ref = {payment_system, #domain_PaymentSystemRef{id = PaymentSystemID}},
+    try dmt_client:checkout_object(latest, Ref, #{woody_context => Context}) of
+        {payment_system, #domain_PaymentSystemObject{data = #domain_PaymentSystem{validation_rules = Ruleset}}} ->
+            {ok, Ruleset}
+    catch
+        throw:#'ObjectNotFound'{} ->
             {error, not_found}
     end.
-
-get_shapshot(Context) ->
-    get_shapshot(head(), Context).
-
-get_shapshot(Reference, _Context) ->
-    dmt_client:checkout(Reference).
-
-head() ->
-    {'head', #'Head'{}}.
