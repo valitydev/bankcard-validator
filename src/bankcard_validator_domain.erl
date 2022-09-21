@@ -17,7 +17,7 @@
 -module(bankcard_validator_domain).
 
 -include_lib("damsel/include/dmsl_domain_thrift.hrl").
--include_lib("damsel/include/dmsl_domain_config_thrift.hrl").
+-include_lib("damsel/include/dmsl_domain_conf_thrift.hrl").
 
 -export([get_payment_system_ruleset/2]).
 
@@ -36,6 +36,6 @@ get_payment_system_ruleset(PaymentSystemID, Context) ->
         {payment_system, #domain_PaymentSystemObject{data = #domain_PaymentSystem{validation_rules = Ruleset}}} ->
             {ok, Ruleset}
     catch
-        throw:#'ObjectNotFound'{} ->
+        throw:#domain_conf_ObjectNotFound{} ->
             {error, not_found}
     end.

@@ -1,5 +1,6 @@
 %%%
 %%% Copyright 2021 RBKmoney
+%%% Copyright 2022 Vality.dev
 %%%
 %%% Licensed under the Apache License, Version 2.0 (the "License");
 %%% you may not use this file except in compliance with the License.
@@ -16,6 +17,7 @@
 
 -module(bankcard_validator_legacy).
 
+-include_lib("damsel/include/dmsl_base_thrift.hrl").
 -include_lib("damsel/include/dmsl_domain_thrift.hrl").
 
 -export([get_payment_system_ruleset/1]).
@@ -28,50 +30,58 @@
 -define(KNOWN_RULES, #{
     <<"AMERICAN EXPRESS">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 15, upper = 15}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 4}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 15, upper = 15}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 4}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
     %% TODO Remove in favor of <<"AMERICAN EXPRESS">>
     <<"AMERICAN EXPRESS COMPANY">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 15, upper = 15}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 4}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 15, upper = 15}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 4}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"CHINA UNION PAY">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}, #'IntegerRange'{lower = 19, upper = 19}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 16, upper = 16},
+                #base_IntegerRange{lower = 19, upper = 19}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"DANKORT">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 16, upper = 16}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"DINERS CLUB INTERNATIONAL">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 14, upper = 14}, #'IntegerRange'{lower = 19, upper = 19}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 14, upper = 14},
+                #base_IntegerRange{lower = 19, upper = 19}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"DISCOVER">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 16, upper = 16}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"JCB">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 16, upper = 16}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
@@ -88,36 +98,52 @@
     %% by the ISO Registration Authority, and must be unique.
     <<"MAESTRO">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 12, upper = 12}, #'IntegerRange'{lower = 19, upper = 19}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 12, upper = 12},
+                #base_IntegerRange{lower = 19, upper = 19}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"MASTERCARD">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number, {ranges, [#base_IntegerRange{lower = 16, upper = 16}]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"NSPK MIR">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 16, upper = 16}, #'IntegerRange'{lower = 19, upper = 20}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 16, upper = 16},
+                #base_IntegerRange{lower = 19, upper = 20}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"VISA">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 13, upper = 13}, #'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 13, upper = 13},
+                #base_IntegerRange{lower = 16, upper = 16}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
     <<"VISA/DANKORT">> => [
         {card_number, {checksum, {luhn, #'domain_PaymentCardNumberChecksumLuhn'{}}}},
-        {card_number, {ranges, [#'IntegerRange'{lower = 13, upper = 13}, #'IntegerRange'{lower = 16, upper = 16}]}},
-        {cvc, {length, #'IntegerRange'{lower = 3, upper = 3}}},
+        {card_number,
+            {ranges, [
+                #base_IntegerRange{lower = 13, upper = 13},
+                #base_IntegerRange{lower = 16, upper = 16}
+            ]}},
+        {cvc, {length, #base_IntegerRange{lower = 3, upper = 3}}},
         {exp_date, {exact_exp_date, #'domain_PaymentCardExactExpirationDate'{}}}
     ],
 
