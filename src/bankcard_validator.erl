@@ -1,5 +1,6 @@
 %%%
 %%% Copyright 2021 RBKmoney
+%%% Copyright 2022 Vality.dev
 %%%
 %%% Licensed under the Apache License, Version 2.0 (the "License");
 %%% you may not use this file except in compliance with the License.
@@ -64,16 +65,16 @@ run_assertions(CardData, Assertions, Env) ->
         fun
             ({K, Checks}) when is_list(Checks) ->
                 V = maps:get(K, CardData, undefined),
-                lists:foreach(
-                    fun(C) -> check_value(V, C, Env) orelse erlang:throw({invalid, K, convert(C)}) end,
-                    Checks
-                );
+                lists:foreach(fun(C) -> assert_value(K, V, C, Env) end, Checks);
             ({K, Check}) ->
                 V = maps:get(K, CardData, undefined),
-                check_value(V, Check, Env) orelse erlang:throw({invalid, K, convert(Check)})
+                assert_value(K, V, Check, Env)
         end,
         Assertions
     ).
+
+assert_value(K, V, Check, Env) ->
+    check_value(V, Check, Env) orelse erlang:throw({invalid, K, convert(Check)}).
 
 check_value(undefined, _, _) ->
     true;
@@ -90,7 +91,7 @@ check_value({M, Y}, {exact_exp_date, #domain_PaymentCardExactExpirationDate{}}, 
         M =< 12 andalso
         {Y, M} >= {Y0, M0}.
 
-check_range(V, #'IntegerRange'{lower = L, upper = U}) ->
+check_range(V, #base_IntegerRange{lower = L, upper = U}) ->
     L =< byte_size(V) andalso byte_size(V) =< U.
 
 check_luhn(<<CheckSum>>, Sum) ->
@@ -122,6 +123,6 @@ get_ruleset(PaymentSystem, Context) ->
     end.
 
 convert({checksum, {luhn, _}}) -> luhn;
-convert({ranges, Ranges}) -> {ranges, [{range, L, U} || #'IntegerRange'{upper = U, lower = L} <- Ranges]};
-convert({length, #'IntegerRange'{upper = U, lower = L}}) -> {length, L, U};
+convert({ranges, Ranges}) -> {ranges, [{range, L, U} || #base_IntegerRange{upper = U, lower = L} <- Ranges]};
+convert({length, #base_IntegerRange{upper = U, lower = L}}) -> {length, L, U};
 convert({exact_exp_date, _}) -> expiration.

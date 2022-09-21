@@ -1,5 +1,6 @@
 %%%
 %%% Copyright 2021 RBKmoney
+%%% Copyright 2022 Vality.dev
 %%%
 %%% Licensed under the Apache License, Version 2.0 (the "License");
 %%% you may not use this file except in compliance with the License.
@@ -17,7 +18,8 @@
 -module(bankcard_validator_ct_helper).
 
 -include_lib("common_test/include/ct.hrl").
--include_lib("damsel/include/dmsl_domain_config_thrift.hrl").
+-include_lib("damsel/include/dmsl_domain_thrift.hrl").
+-include_lib("damsel/include/dmsl_domain_conf_thrift.hrl").
 
 %% API
 -export([init_suite/2]).
@@ -47,9 +49,9 @@ init_suite(Module, Config) ->
         [
             {
                 'Repository',
-                {dmsl_domain_config_thrift, 'Repository'},
+                {dmsl_domain_conf_thrift, 'Repository'},
                 fun('Checkout', _) ->
-                    {ok, #'Snapshot'{
+                    {ok, #domain_conf_Snapshot{
                         version = 1,
                         domain = #{
                             ?PAYMENT_SYSTEM_REF(<<"VISA">>) =>

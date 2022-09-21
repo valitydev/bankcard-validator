@@ -1,19 +1,13 @@
-.rebar3
-_*
-.eunit
+# Build artifacts
+/_build/
 *.o
 *.beam
 *.plt
-*.swp
-*.swo
-.erlang.cookie
-ebin
-log
+
+# Run artifacts
 erl_crash.dump
-.rebar
-logs
-_build
-.idea
-*.iml
-rebar3.crashdump
-*~
+log
+
+# make stuff
+/.image.*
+Makefile.env
