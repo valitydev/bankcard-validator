@@ -17,9 +17,8 @@
 
 -module(bankcard_validator_ct_helper).
 
--include_lib("common_test/include/ct.hrl").
 -include_lib("damsel/include/dmsl_domain_thrift.hrl").
--include_lib("damsel/include/dmsl_domain_conf_thrift.hrl").
+-include_lib("damsel/include/dmsl_domain_conf_v2_thrift.hrl").
 
 %% API
 -export([init_suite/2]).
@@ -45,24 +44,45 @@
 init_suite(Module, Config) ->
     SupPid = start_mocked_service_sup(Module),
     Apps1 = start_app(woody, [{acceptors_pool_size, 4}]),
+    AllObjects = #{
+        ?PAYMENT_SYSTEM_REF(<<"VISA">>) =>
+            ?PAYMENT_SYSTEM_OBJ(
+                <<"VISA">>,
+                bankcard_validator_legacy:get_payment_system_ruleset(<<"VISA">>)
+            ),
+        ?PAYMENT_SYSTEM_REF(<<"DUMMY">>) =>
+            ?PAYMENT_SYSTEM_OBJ(<<"DUMMY">>, undefined)
+    },
     ServiceURLs = mock_services_(
         [
             {
+                'RepositoryClient',
+                {dmsl_domain_conf_v2_thrift, 'RepositoryClient'},
+                fun('CheckoutObject', {{version, 1}, ObjectRef}) ->
+                    case maps:get(ObjectRef, AllObjects, undefined) of
+                        undefined ->
+                            woody_error:raise(business, #domain_conf_v2_ObjectNotFound{});
+                        Object ->
+                            {ok, #domain_conf_v2_VersionedObject{
+                                info = #domain_conf_v2_VersionedObjectInfo{
+                                    version = 1,
+                                    changed_at = genlib_rfc3339:format(genlib_time:unow(), second),
+                                    changed_by = #domain_conf_v2_Author{
+                                        id = ~b"TEST",
+                                        name = ~b"TEST",
+                                        email = ~b"TEST"
+                                    }
+                                },
+                                object = Object
+                            }}
+                    end
+                end
+            },
+            {
                 'Repository',
-                {dmsl_domain_conf_thrift, 'Repository'},
-                fun('Checkout', _) ->
-                    {ok, #domain_conf_Snapshot{
-                        version = 1,
-                        domain = #{
-                            ?PAYMENT_SYSTEM_REF(<<"VISA">>) =>
-                                ?PAYMENT_SYSTEM_OBJ(
-                                    <<"VISA">>,
-                                    bankcard_validator_legacy:get_payment_system_ruleset(<<"VISA">>)
-                                ),
-                            ?PAYMENT_SYSTEM_REF(<<"DUMMY">>) =>
-                                ?PAYMENT_SYSTEM_OBJ(<<"DUMMY">>, undefined)
-                        }
-                    }}
+                {dmsl_domain_conf_v2_thrift, 'Repository'},
+                fun('GetLatestVersion', _) ->
+                    {ok, 1}
                 end
             }
         ],

@@ -18,7 +18,7 @@
 -module(bankcard_validator_domain).
 
 -include_lib("damsel/include/dmsl_domain_thrift.hrl").
--include_lib("damsel/include/dmsl_domain_conf_thrift.hrl").
+-include_lib("damsel/include/dmsl_domain_conf_v2_thrift.hrl").
 
 -export([get_payment_system_ruleset/2]).
 
@@ -34,9 +34,12 @@
 get_payment_system_ruleset(PaymentSystemID, Context) ->
     Ref = {payment_system, #domain_PaymentSystemRef{id = PaymentSystemID}},
     try dmt_client:checkout_object(latest, Ref, #{woody_context => Context}) of
-        {payment_system, #domain_PaymentSystemObject{data = #domain_PaymentSystem{validation_rules = Ruleset}}} ->
+        #domain_conf_v2_VersionedObject{
+            object =
+                {payment_system, #domain_PaymentSystemObject{data = #domain_PaymentSystem{validation_rules = Ruleset}}}
+        } ->
             {ok, Ruleset}
     catch
-        throw:#domain_conf_ObjectNotFound{} ->
+        throw:#domain_conf_v2_ObjectNotFound{} ->
             {error, not_found}
     end.
