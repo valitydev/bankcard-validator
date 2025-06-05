@@ -90,7 +90,7 @@ test_no_rules_found(_C) ->
             #{card_number => <<"12345678909887">>, exp_date => {2, 2020}},
             <<"NONEXISTED">>,
             DefaultEnv,
-            #{deadline => undefined, rpc_id => #{}}
+            #{deadline => undefined, rpc_id => new_rpc_id()}
         ),
         error(not_reachable)
     catch
@@ -104,7 +104,7 @@ test_invalid_card_number_checksum(_C) ->
             #{card_number => <<"12345678909887">>, exp_date => {2, 2030}},
             <<"VISA">>,
             DefaultEnv,
-            #{deadline => undefined, rpc_id => #{}}
+            #{deadline => undefined, rpc_id => new_rpc_id()}
         ),
     ok.
 
@@ -115,7 +115,7 @@ test_invalid_card_number_range(_C) ->
             #{card_number => <<"424242424242424242">>, exp_date => {2, 2030}, cvc => <<"12345">>},
             <<"VISA">>,
             DefaultEnv,
-            #{deadline => undefined, rpc_id => #{}}
+            #{deadline => undefined, rpc_id => new_rpc_id()}
         ),
     ok.
 
@@ -126,7 +126,7 @@ test_invalid_cvc(_C) ->
             #{card_number => <<"4242424242424242">>, exp_date => {2, 2030}, cvc => <<"12345">>},
             <<"VISA">>,
             DefaultEnv,
-            #{deadline => undefined, rpc_id => #{}}
+            #{deadline => undefined, rpc_id => new_rpc_id()}
         ),
     ok.
 
@@ -137,7 +137,7 @@ test_invalid_exp_date(_C) ->
             #{card_number => <<"4242424242424242">>, exp_date => {2, 2020}},
             <<"VISA">>,
             DefaultEnv,
-            #{deadline => undefined, rpc_id => #{}}
+            #{deadline => undefined, rpc_id => new_rpc_id()}
         ),
     ok.
 
@@ -147,7 +147,7 @@ test_empty_ruleset(_C) ->
         #{card_number => <<"42424242424242424242">>, exp_date => {2, 2020}},
         <<"DUMMY">>,
         DefaultEnv,
-        #{deadline => undefined, rpc_id => #{}}
+        #{deadline => undefined, rpc_id => new_rpc_id()}
     ),
     ok.
 
@@ -157,6 +157,11 @@ test_empty_legacy_ruleset(_C) ->
         #{card_number => <<"42424242424242424242">>, exp_date => {2, 2020}},
         <<"UZCARD">>,
         DefaultEnv,
-        #{deadline => undefined, rpc_id => #{}}
+        #{deadline => undefined, rpc_id => new_rpc_id()}
     ),
     ok.
+
+%%
+
+new_rpc_id() ->
+    woody_context:new_rpc_id(woody_context:new_req_id()).
